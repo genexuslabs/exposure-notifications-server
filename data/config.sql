@@ -42,5 +42,19 @@ BEGIN;
                  'UY', 
                  'gx', 
                  '{1}'); 
-
+     INSERT INTO signatureinfo
+                (id, 
+                signing_key, 
+                app_package_name, 
+                bundle_id, 
+                signing_key_version, 
+                signing_key_id, 
+                thru_timestamp)
+    VALUES      (1,
+                 'gxKey',
+                 'uy.gub.salud.plancovid19uy',
+                 'uy.gub.app.covid19',
+                 'v1',
+                 '748',
+                 NULL);
 END; 
