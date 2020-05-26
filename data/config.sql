@@ -11,8 +11,8 @@ BEGIN;
                   'ios', 
                   '{"UY"}', 
                   true, 
-                  'ABCD1234', 
-                  'DEFG5678', 
+                  NULL, 
+                  NULL, 
                   NULL ); 
 
     INSERT INTO authorizedapp 
