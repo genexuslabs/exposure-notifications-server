@@ -27,7 +27,7 @@ func TestRenderAuthorizedApps(t *testing.T) {
 	// If this test fails, it's likely that you changed something in
 	//  internal/authorizedapp/model/
 	// And whatever you changed is used in the
-	//  tools/admin-console/templates/app_view.html
+	//  tools/admin-console/templates/authorizedapp.html
 	// That is what caused the test failure.
 	m := admin.TemplateMap{}
 	authorizedApp := model.NewAuthorizedApp()
