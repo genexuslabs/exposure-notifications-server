@@ -119,7 +119,7 @@ func (h *publishHandler) handleRequest(w http.ResponseWriter, r *http.Request) r
 
 	if appConfig.IsIOS() {
 		if appConfig.DeviceCheckDisabled {
-			logger.Errorf("skipping DeviceCheck for %v (disabled)", data.AppPackageName)
+			logger.Warnf("skipping DeviceCheck for %v (disabled)", data.AppPackageName)
 			h.serverenv.MetricsExporter(ctx).WriteInt("publish-devicecheck-skip", true, 1)
 		} else if err := verification.VerifyDeviceCheck(ctx, appConfig, &data); err != nil {
 			message := fmt.Sprintf("unable to verify devicecheck payload: %v", err)
@@ -128,7 +128,7 @@ func (h *publishHandler) handleRequest(w http.ResponseWriter, r *http.Request) r
 		}
 	} else if appConfig.IsAndroid() {
 		if appConfig.SafetyNetDisabled {
-			logger.Errorf("skipping SafetyNet for %v (disabled)", data.AppPackageName)
+			logger.Warnf("skipping SafetyNet for %v (disabled)", data.AppPackageName)
 			h.serverenv.MetricsExporter(ctx).WriteInt("publish-safetynet-skip", true, 1)
 		} else if err := verification.VerifySafetyNet(ctx, time.Now(), appConfig, &data); err != nil {
 			message := fmt.Sprintf("unable to verify safetynet payload: %v", err)
