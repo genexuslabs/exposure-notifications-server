@@ -217,11 +217,11 @@ func (db *ExportDB) AddSignatureInfo(ctx context.Context, si *model.SignatureInf
 		row := tx.QueryRow(ctx, `
 			INSERT INTO
  				SignatureInfo
-				(signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp)
+				(signing_key, signing_key_version, signing_key_id, thru_timestamp)
 			VALUES
-				($1, $2, $3, $4, $5, $6)
+				($1, $2, $3, $4)
 			RETURNING id
-			`, si.SigningKey, si.AppPackageName, si.BundleID, si.SigningKeyVersion, si.SigningKeyID, thru)
+			`, si.SigningKey, si.SigningKeyVersion, si.SigningKeyID, thru)
 
 		if err := row.Scan(&si.ID); err != nil {
 			return fmt.Errorf("fetching id: %w", err)
@@ -239,11 +239,11 @@ func (db *ExportDB) UpdateSignatureInfo(ctx context.Context, si *model.Signature
 		result, err := tx.Exec(ctx, `
 			UPDATE SignatureInfo
 			SET
-				signing_key = $1, app_package_name = $2, bundle_id = $3,
-				signing_key_version = $4, signing_key_id = $5, thru_timestamp = $6
+				signing_key = $1, 
+				signing_key_version = $2, signing_key_id = $3, thru_timestamp = $4
 			WHERE
-				id = $7
- 			`, si.SigningKey, si.AppPackageName, si.BundleID, si.SigningKeyVersion, si.SigningKeyID, thru, si.ID)
+				id = $5
+ 			`, si.SigningKey, si.SigningKeyVersion, si.SigningKeyID, thru, si.ID)
 		if err != nil {
 			return fmt.Errorf("updating signatureinfo: %w", err)
 		}
@@ -263,7 +263,7 @@ func (db *ExportDB) ListAllSigntureInfos(ctx context.Context) ([]*model.Signatur
 
 	rows, err := conn.Query(ctx, `
     SELECT
-      id, signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp
+      id, signing_key, signing_key_version, signing_key_id, thru_timestamp
     FROM
       SignatureInfo
     ORDER BY signing_key_id ASC, signing_key_version ASC, thru_timestamp DESC, app_package_name ASC, bundle_id ASC
@@ -296,7 +296,7 @@ func (db *ExportDB) LookupSignatureInfos(ctx context.Context, ids []int64, valid
 
 	rows, err := conn.Query(ctx, `
     SELECT
-      id, signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp
+      id, signing_key, signing_key_version, signing_key_id, thru_timestamp
     FROM
       SignatureInfo
     WHERE
@@ -331,7 +331,7 @@ func (db *ExportDB) GetSignatureInfo(ctx context.Context, id int64) (*model.Sign
 
 	row := conn.QueryRow(ctx, `
 		SELECT
-			id, signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp
+			id, signing_key, signing_key_version, signing_key_id, thru_timestamp
 		FROM
 			SignatureInfo
 		WHERE
@@ -344,7 +344,7 @@ func (db *ExportDB) GetSignatureInfo(ctx context.Context, id int64) (*model.Sign
 func scanOneSignatureInfo(ctx context.Context, row pgx.Row) (*model.SignatureInfo, error) {
 	var info model.SignatureInfo
 	var thru *time.Time
-	if err := row.Scan(&info.ID, &info.SigningKey, &info.AppPackageName, &info.BundleID, &info.SigningKeyVersion, &info.SigningKeyID, &thru); err != nil {
+	if err := row.Scan(&info.ID, &info.SigningKey, &info.SigningKeyVersion, &info.SigningKeyID, &thru); err != nil {
 		return nil, err
 	}
 	if thru != nil {

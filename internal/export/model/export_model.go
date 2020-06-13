@@ -105,10 +105,10 @@ type ExportFile struct {
 }
 
 type SignatureInfo struct {
-	ID                int64     `db:"id"`
-	SigningKey        string    `db:"signing_key"`
-	AppPackageName    string    `db:"app_package_name"`
-	BundleID          string    `db:"bundle_id"`
+	ID         int64  `db:"id"`
+	SigningKey string `db:"signing_key"`
+	//AppPackageName    string    `db:"app_package_name"`
+	//BundleID          string    `db:"bundle_id"`
 	SigningKeyVersion string    `db:"signing_key_version"`
 	SigningKeyID      string    `db:"signing_key_id"`
 	EndTimestamp      time.Time `db:"thru_timestamp"`
