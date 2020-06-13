@@ -219,7 +219,7 @@ func (db *ExportDB) AddSignatureInfo(ctx context.Context, si *model.SignatureInf
  				SignatureInfo
 				(signing_key, signing_key_version, signing_key_id, thru_timestamp)
 			VALUES
-				($1, $2, $3, $4, $5, $6)
+				($1, $2, $3, $4)
 			RETURNING id
 			`, si.SigningKey, si.SigningKeyVersion, si.SigningKeyID, thru)
 
@@ -263,7 +263,7 @@ func (db *ExportDB) ListAllSigntureInfos(ctx context.Context) ([]*model.Signatur
 
 	rows, err := conn.Query(ctx, `
     SELECT
-      id, signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp
+      id, signing_key, signing_key_version, signing_key_id, thru_timestamp
     FROM
       SignatureInfo
     ORDER BY signing_key_id ASC, signing_key_version ASC, thru_timestamp DESC, app_package_name ASC, bundle_id ASC
@@ -296,7 +296,7 @@ func (db *ExportDB) LookupSignatureInfos(ctx context.Context, ids []int64, valid
 
 	rows, err := conn.Query(ctx, `
     SELECT
-      id, signing_key, app_package_name, bundle_id, signing_key_version, signing_key_id, thru_timestamp
+      id, signing_key, signing_key_version, signing_key_id, thru_timestamp
     FROM
       SignatureInfo
     WHERE
