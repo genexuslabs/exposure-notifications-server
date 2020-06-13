@@ -154,11 +154,11 @@ type SignatureInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Apple App Store Application Bundle ID (deprecated)
-	// AppBundleId *string `protobuf:"bytes,1,opt,name=app_bundle_id,json=appBundleId" json:"app_bundle_id,omitempty"`
+	// Apple App Store Application Bundle ID
+	AppBundleId *string `protobuf:"bytes,1,opt,name=app_bundle_id,json=appBundleId" json:"app_bundle_id,omitempty"`
 	// Android App package name
-	// Don’t set this if exports are to be consumed by multiple apps. (deprecated)
-	// AndroidPackage *string `protobuf:"bytes,2,opt,name=android_package,json=androidPackage" json:"android_package,omitempty"`
+	// Don’t set this if exports are to be consumed by multiple apps.
+	AndroidPackage *string `protobuf:"bytes,2,opt,name=android_package,json=androidPackage" json:"android_package,omitempty"`
 	// Key version for rollovers
 	// Must be in character class [a-zA-Z0-9_]. E.g., 'v1'
 	VerificationKeyVersion *string `protobuf:"bytes,3,opt,name=verification_key_version,json=verificationKeyVersion" json:"verification_key_version,omitempty"`
@@ -201,6 +201,20 @@ func (x *SignatureInfo) ProtoReflect() protoreflect.Message {
 // Deprecated: Use SignatureInfo.ProtoReflect.Descriptor instead.
 func (*SignatureInfo) Descriptor() ([]byte, []int) {
 	return file_internal_pb_export_export_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *SignatureInfo) GetAppBundleId() string {
+	if x != nil && x.AppBundleId != nil {
+		return *x.AppBundleId
+	}
+	return ""
+}
+
+func (x *SignatureInfo) GetAndroidPackage() string {
+	if x != nil && x.AndroidPackage != nil {
+		return *x.AndroidPackage
+	}
+	return ""
 }
 
 func (x *SignatureInfo) GetVerificationKeyVersion() string {

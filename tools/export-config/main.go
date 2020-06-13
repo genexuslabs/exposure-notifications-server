@@ -95,8 +95,6 @@ func main() {
 
 	si := model.SignatureInfo{
 		SigningKey:        *signingKey,
-		AppPackageName:    *appPkgID,
-		BundleID:          *bundleID,
 		SigningKeyVersion: *signingKeyVersion,
 		SigningKeyID:      *signingKeyID,
 	}

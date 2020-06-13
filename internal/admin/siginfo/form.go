@@ -42,8 +42,6 @@ func (f *formData) PopulateSigInfo(si *model.SignatureInfo) error {
 	}
 
 	si.SigningKey = f.SigningKey
-	si.AppPackageName = f.AppPackageName
-	si.BundleID = f.BundleID
 	si.SigningKeyVersion = f.SigningKeyVersion
 	si.SigningKeyID = f.SigningKeyID
 	si.EndTimestamp = ts
