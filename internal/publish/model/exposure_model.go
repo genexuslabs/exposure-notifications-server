@@ -18,11 +18,12 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
-	"os"
+
 	"github.com/google/exposure-notifications-server/internal/base64util"
 )
 
@@ -223,12 +224,12 @@ func TransformExposureKey(exposureKey ExposureKey, appPackageName string, upcase
 	}
 
 	// Validate that the key is no longer effective.
-	skip, _ := strconv.ParseBool(os.Getenv("SKIP_KEY_DATE_VALIDATION")); 
+	skip, _ := strconv.ParseBool(os.Getenv("SKIP_KEY_DATE_VALIDATION"))
 	if !skip && exposureKey.IntervalNumber+exposureKey.IntervalCount > maxIntervalNumber {
 		return nil, fmt.Errorf("interval number %v + interval count %v represents a key that is still valid, must end <= %v",
 			exposureKey.IntervalNumber, exposureKey.IntervalCount, maxIntervalNumber)
 	}
-	
+
 	if tr := exposureKey.TransmissionRisk; tr < MinTransmissionRisk || tr > MaxTransmissionRisk {
 		return nil, fmt.Errorf("invalid transmission risk: %v, must be >= %v && <= %v", tr, MinTransmissionRisk, MaxTransmissionRisk)
 	}
@@ -254,10 +255,12 @@ func TransformExposureKey(exposureKey ExposureKey, appPackageName string, upcase
 func (t *Transformer) TransformPublish(inData *Publish, batchTime time.Time) ([]*Exposure, error) {
 	// Validate the number of keys that want to be published.
 	if len(inData.Keys) == 0 {
-		return nil, fmt.Errorf("no exposure keys in publish request")
+		msg := "no exposure keys in publish request"
+		return nil, fmt.Errorf(msg)
 	}
 	if len(inData.Keys) > t.maxExposureKeys {
-		return nil, fmt.Errorf("too many exposure keys in publish: %v, max of %v is allowed", len(inData.Keys), t.maxExposureKeys)
+		msg := fmt.Sprintf("too many exposure keys in publish: %v, max of %v is allowed", len(inData.Keys), t.maxExposureKeys)
+		return nil, fmt.Errorf(msg)
 	}
 
 	createdAt := TruncateWindow(batchTime, t.truncateWindow)
@@ -285,19 +288,43 @@ func (t *Transformer) TransformPublish(inData *Publish, batchTime time.Time) ([]
 		entities = append(entities, exposure)
 	}
 
-	// Ensure that the uploaded keys are for a consecutive time period. No
-	// overlaps and no gaps.
-	// 1) Sort by interval number.
+	// Validate the uploaded data meets configuration parameters.
+	// In v1.5+, it is possible to have multiple keys that overlap. They
+	// take the form of the same start interval with variable rolling period numbers.
+	// Sort by interval number to make necessary checks easier.
 	sort.Slice(entities, func(i int, j int) bool {
+		if entities[i].IntervalNumber == entities[j].IntervalNumber {
+			return entities[i].IntervalCount < entities[j].IntervalCount
+		}
 		return entities[i].IntervalNumber < entities[j].IntervalNumber
 	})
-	// 2) Walk the slice and verify no gaps/overlaps.
-	// We know the slice isn't empty, seed w/ the first interval.
-	nextInterval := entities[0].IntervalNumber
+
+	// Check that any overlapping keys meet configuration.
+	// Overlapping keys must have the same start interval. And there is a max number
+	// of "same day" keys that are allowed.
+	// We do not enforce that keys have UTC midnight aligned start intervals.
+
+	// Running count of start intervals.
+	startIntervals := make(map[int32]int)
+	lastInterval := entities[0].IntervalNumber
+	nextInterval := entities[0].IntervalNumber + entities[0].IntervalCount
+
 	for _, ex := range entities {
-		if ex.IntervalNumber < nextInterval {
-			return nil, fmt.Errorf("exposure keys have overlapping intervals")
+		// Relies on the default value of 0 for the map value type.
+		startIntervals[ex.IntervalNumber] = startIntervals[ex.IntervalNumber] + 1
+
+		if ex.IntervalNumber == lastInterval {
+			// OK, overlaps by start interval. But move out the nextInterval
+			nextInterval = ex.IntervalNumber + ex.IntervalCount
+			continue
 		}
+
+		if ex.IntervalNumber < nextInterval {
+			msg := fmt.Sprintf("exposure keys have non aligned overlapping intervals. %v overlaps with previous key that is good from %v to %v.", ex.IntervalNumber, lastInterval, nextInterval)
+			return nil, fmt.Errorf(msg)
+		}
+		// OK, current key starts at or after the end of the previous one. Advance both variables.
+		lastInterval = ex.IntervalNumber
 		nextInterval = ex.IntervalNumber + ex.IntervalCount
 	}
 
